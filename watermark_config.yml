@@ -6,16 +6,16 @@ device: cuda
 
 Data:
   image_size: 32
-  batch_size: 4096
+  batch_size: 1024
   num_workers: 4
 
 Training:
-  total_epochs: 48
+  total_epochs: 120
   stage_epochs:
-    - {stage: 0, epochs: 16}   # warm-up: no attacks
-    - {stage: 1, epochs: 12}   # light differentiable attacks
-    - {stage: 2, epochs: 12}  # add differentiable JPEG
-    - {stage: 3, epochs: 8}  # add crop/rotate/recompression
+    - {stage: 0, epochs: 24}   # warm-up: no attacks
+    - {stage: 1, epochs: 36}   # light differentiable attacks
+    - {stage: 2, epochs: 30}  # add differentiable JPEG
+    - {stage: 3, epochs: 30}  # add crop/rotate/recompression
 
 Optimizer:
   lr: 0.0002
