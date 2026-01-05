@@ -222,7 +222,7 @@ def _stage_for_epoch(epoch: int, schedule: List[Dict]) -> int:
 def _accuracies_from_logits(logits: torch.Tensor, code: torch.Tensor, ecc: ECCConfig) -> Dict[str, float]:
     probs = torch.sigmoid(logits)
     hard_code = (probs >= 0.5).float()
-    decoded_payload = majority_decode(hard_code, ecc)
+    decoded_payload = majority_decode(probs, ecc)
     payload = majority_decode(code, ecc)
     code_acc = bit_accuracy(hard_code, code)
     payload_acc = bit_accuracy(decoded_payload, payload)
@@ -336,6 +336,8 @@ def evaluate(
         name = scenario.name
         code_bits_total = 0
         code_bit_errors = 0
+        payload_bits_total = 0
+        payload_bit_errors = 0
         payload_success = 0
         payload_total = 0
         psnr_scores: List[float] = []
@@ -356,11 +358,14 @@ def evaluate(
                 logits, _ = msg_decoder(attacked)
                 probs = torch.sigmoid(logits)
                 hard = (probs >= 0.5).float()
-                payload_pred = majority_decode(hard, ecc)
+                payload_pred = majority_decode(probs, ecc)
                 payload_match = (payload_pred == payload).float().prod(dim=1)
 
                 code_bits_total += code.numel()
                 code_bit_errors += (hard != code).float().sum().item()
+
+                payload_bits_total += payload.numel()
+                payload_bit_errors += (payload_pred != payload).float().sum().item()
                 payload_success += payload_match.sum().item()
                 payload_total += payload_match.numel()
 
@@ -369,9 +374,13 @@ def evaluate(
                     ssim_scores.append(_compute_ssim_batch(recon, images))
 
         code_ber = code_bit_errors / max(1, code_bits_total)
+        payload_ber = payload_bit_errors / max(1, payload_bits_total)
+        payload_bit_acc = 1.0 - payload_ber
         payload_sr = payload_success / max(1, payload_total)
         results[name] = {
             "code_BER": code_ber,
+            "payload_BER": payload_ber,
+            "payload_bit_acc": payload_bit_acc,
             "payload_success": payload_sr,
             "psnr": float(sum(psnr_scores) / max(len(psnr_scores), 1)),
             "ssim": float(sum(ssim_scores) / max(len(ssim_scores), 1)) if ssim_scores else float("nan"),
@@ -450,6 +459,8 @@ def main() -> None:
 
         eval_metrics = evaluate(model, msg_decoder, val_loader, device, ecc_cfg, scenarios, cfg)
         clean_payload = eval_metrics.get("clean", {}).get("payload_success", 0.0)
+        clean_payload_bit_acc = eval_metrics.get("clean", {}).get("payload_bit_acc", 0.0)
+        clean_code_ber = eval_metrics.get("clean", {}).get("code_BER", 0.0)
         if clean_payload > best_payload:
             best_payload = clean_payload
             torch.save(
@@ -485,7 +496,7 @@ def main() -> None:
         print(
             f"Epoch {epoch:03d} stage={stage} | "
             f"train_loss={train_metrics['loss']:.4f} img={train_metrics['img_loss']:.4f} msg={train_metrics['msg_loss']:.4f} | "
-            f"clean_payload_sr={clean_payload:.3f}"
+            f"clean_payload_sr={clean_payload:.3f} payload_bit_acc={clean_payload_bit_acc:.3f} code_BER={clean_code_ber:.3f}"
         )
 
     print("Training finished. Best clean payload success:", best_payload)

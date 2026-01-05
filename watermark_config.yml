@@ -1,5 +1,3 @@
-total_epochs: 28
-device: cuda
 data_root: ./data/cifar-10-python
 runs_dir: ./runs/watermark
 dataset: cifar10
@@ -12,12 +10,12 @@ Data:
   num_workers: 4
 
 Training:
-  total_epochs: 40
+  total_epochs: 48
   stage_epochs:
-    - {stage: 0, epochs: 4}   # warm-up: no attacks
+    - {stage: 0, epochs: 16}   # warm-up: no attacks
     - {stage: 1, epochs: 12}   # light differentiable attacks
     - {stage: 2, epochs: 12}  # add differentiable JPEG
-    - {stage: 3, epochs: 12}  # add crop/rotate/recompression
+    - {stage: 3, epochs: 8}  # add crop/rotate/recompression
 
 Optimizer:
   lr: 0.0002
