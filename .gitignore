@@ -1,0 +1,6 @@
+test/
+__pycache__/
+input.jpg
+runs/
+data/
+.vscode/

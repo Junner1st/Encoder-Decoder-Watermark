@@ -1,0 +1,19 @@
+data_root: ./data/celeba
+runs_dir: ./runs
+batch_size: 256
+epochs: 20
+lr: 0.0002
+beta1: 0.5
+beta2: 0.999
+num_workers: 4
+latent_dim: 256
+base_channels: 64
+image_height: 218
+image_width: 178
+input_channels: 3
+device: cuda
+max_steps_per_epoch:
+max_eval_batches:
+eval_ssim: false
+eval_lpips: false
+download_celebA: true

@@ -1,0 +1,54 @@
+total_epochs: 28
+device: cuda
+data_root: ./data/cifar-10-python
+runs_dir: ./runs/watermark
+dataset: cifar10
+download_data: true
+device: cuda
+
+Data:
+  image_size: 32
+  batch_size: 4096
+  num_workers: 4
+
+Training:
+  total_epochs: 40
+  stage_epochs:
+    - {stage: 0, epochs: 4}   # warm-up: no attacks
+    - {stage: 1, epochs: 12}   # light differentiable attacks
+    - {stage: 2, epochs: 12}  # add differentiable JPEG
+    - {stage: 3, epochs: 12}  # add crop/rotate/recompression
+
+Optimizer:
+  lr: 0.0002
+  beta1: 0.5
+  beta2: 0.999
+
+Payload:
+  payload_bits: 96
+  repetition: 2
+  interleave: true
+
+Loss:
+  lambda_img: 5.0
+  lambda_msg: 1.0
+  lambda_reg: 0.0
+
+Attack:
+  jpeg_qualities: [95, 90, 80, 70, 60, 50]
+  resize_min: 0.5
+  resize_max: 1.5
+  crop_min: 0.05
+  crop_max: 0.3
+  rotate_degrees: [2.0, 5.0, 10.0]
+  blur_sigma_min: 0.3
+  blur_sigma_max: 1.5
+  noise_sigma_min: 0.004
+  noise_sigma_max: 0.02
+  color_jitter: {brightness: 0.05, contrast: 0.05, saturation: 0.05, hue: 0.02}
+  recompress: true
+
+Evaluation:
+  max_eval_batches: 50
+  compute_ssim: true
+  compute_lpips: false
