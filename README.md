@@ -84,6 +84,12 @@ During training the pipeline logs:
 
 `metrics.jsonl` stores per-epoch summaries for easy plotting (BER vs. quality, payload success vs. attack strength, etc.).
 
+To plot per-epoch curves from a saved run:
+
+```bash
+python -m src.utils.plot_metrics runs/watermark/exp6/metrics.jsonl
+```
+
 ## Troubleshooting
 
 - **Dataset missing** — ensure `data_root` points to the correct folder structure or set `download_data: true` to let torchvision populate it.
